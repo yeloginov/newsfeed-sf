@@ -33,7 +33,7 @@ func (api *API) endpoints() {
 	// получить n последних новостей
 	api.r.HandleFunc("/news/{n}", api.posts).Methods(http.MethodGet, http.MethodOptions)
 	// веб-приложение
-	api.r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("./webapp"))))
+	api.r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("././web"))))
 }
 
 func (api *API) posts(w http.ResponseWriter, r *http.Request) {

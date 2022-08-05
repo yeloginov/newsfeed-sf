@@ -34,14 +34,14 @@ type config struct {
 
 func main() {
 
-	// инициализация зависимостей приложения
+	//  Инициализация зависимостей приложения.
 	db, err := storage.New(fmt.Sprintf("postgres://%s:%s@%s:%s/%s", DBUser, DBPassword, DBHost, DBPort, DBName))
 	if err != nil {
 		log.Fatal(err)
 	}
 	api := api.New(db)
 
-	// чтение и раскодирование файла конфигурации
+	// Чтение и раскодирование файла конфигурации.
 	b, err := ioutil.ReadFile("./config.json")
 	if err != nil {
 		log.Fatal(err)
@@ -52,8 +52,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// запуск парсинга новостей в отдельном потоке
-	// для каждой ссылки
+	// Запуск парсинга новостей в отдельном потоке для каждой ссылки.
 	chPosts := make(chan []storage.Post)
 	chErrs := make(chan error)
 	for _, url := range config.Sources {
