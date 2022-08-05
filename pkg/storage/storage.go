@@ -1,9 +1,13 @@
+// Пакет storage
+// CRUD-действия с базой данных Postgres
+//
+// Проект NewsFeed
+// Автор: Егор Логинов (GO-11) по заданию SkillFactory в модуле 36 (Новостной агрегатор)
+
 package storage
 
 import (
 	"context"
-	"errors"
-	"os"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 )
@@ -15,53 +19,55 @@ type DB struct {
 
 // Публикация, получаемая из RSS.
 type Post struct {
-	ID      int    // номер записи
-	Title   string // заголовок публикации
-	Content string // содержание публикации
-	PubTime int64  // время публикации
-	Link    string // ссылка на источник
+	ID       int    // идентификатор
+	Title    string // заголовок
+	Content  string // содержание
+	URL      string // ссылка на источник
+	PostedAt int64  // время публикации
 }
 
-func New() (*DB, error) {
-	connstr := os.Getenv("newsdb")
-	if connstr == "" {
-		return nil, errors.New("не указано подключение к БД")
-	}
-	pool, err := pgxpool.Connect(context.Background(), connstr)
+// New(p string) конструктор объекта БД Postgress с параметрами p.
+func New(p string) (*DB, error) {
+
+	c, err := pgxpool.Connect(context.Background(), p)
 	if err != nil {
 		return nil, err
 	}
-	db := DB{
-		pool: pool,
+
+	s := DB{
+		pool: c,
 	}
-	return &db, nil
+
+	return &s, nil
 }
 
-func (db *DB) StoreNews(news []Post) error {
-	for _, post := range news {
+// StoreNews сохраняет посты из слайса pp в базу данных db.
+func (db *DB) StorePosts(pp []Post) error {
+
+	for _, post := range pp {
 		_, err := db.pool.Exec(context.Background(), `
-		INSERT INTO news(title, content, pub_time, link)
+		INSERT INTO news(title, content, url, posted_at)
 		VALUES ($1, $2, $3, $4)`,
-			post.Title,
-			post.Content,
-			post.PubTime,
-			post.Link,
+			post.Title, post.Content, post.URL, post.PostedAt,
 		)
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
-// News возвращает последние новости из БД.
+// News возвращает n последних постов из базы данных db.
 func (db *DB) News(n int) ([]Post, error) {
-	if n == 0 {
+
+	if n < 1 {
 		n = 10
 	}
+
 	rows, err := db.pool.Query(context.Background(), `
-	SELECT id, title, content, pub_time, link FROM news
-	ORDER BY pub_time DESC
+	SELECT id, title, content, url, posted_at FROM news
+	ORDER BY posted_at DESC
 	LIMIT $1
 	`,
 		n,
@@ -69,20 +75,16 @@ func (db *DB) News(n int) ([]Post, error) {
 	if err != nil {
 		return nil, err
 	}
-	var news []Post
+
+	var nn []Post
 	for rows.Next() {
 		var p Post
-		err = rows.Scan(
-			&p.ID,
-			&p.Title,
-			&p.Content,
-			&p.PubTime,
-			&p.Link,
-		)
+		err = rows.Scan(&p.ID, &p.Title, &p.Content, &p.URL, &p.PostedAt)
 		if err != nil {
 			return nil, err
 		}
-		news = append(news, p)
+		nn = append(nn, p)
 	}
-	return news, rows.Err()
+
+	return nn, rows.Err()
 }

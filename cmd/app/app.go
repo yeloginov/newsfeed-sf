@@ -6,6 +6,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -16,6 +17,15 @@ import (
 	"newsfeed/pkg/storage"
 )
 
+// Параметры подключения к БД Postgres.
+const (
+	DBHost     = "89.223.121.125"
+	DBPort     = "5432"
+	DBName     = "newsfeed"
+	DBUser     = "gn_external"
+	DBPassword = "Tdf_p9EXa9n"
+)
+
 // конфигурация приложения
 type config struct {
 	URLS   []string `json:"rss"`
@@ -24,7 +34,7 @@ type config struct {
 
 func main() {
 	// инициализация зависимостей приложения
-	db, err := storage.New()
+	db, err := storage.New(fmt.Sprintf("postgres://%s:%s@%s:%s/%s", DBUser, DBPassword, DBHost, DBPort, DBName))
 	if err != nil {
 		log.Fatal(err)
 	}
