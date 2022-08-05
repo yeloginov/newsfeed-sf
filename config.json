@@ -1,8 +1,9 @@
 {
-    "rss":[
-       "https://habr.com/ru/rss/hub/go/all/?fl=ru",
-       "https://habr.com/ru/rss/best/daily/?fl=ru",
-       "https://cprss.s3.amazonaws.com/golangweekly.com.xml"
-    ],
-    "request_period": 5
- }
+   "rss":[
+      "http://static.feed.rbc.ru/rbc/logical/footer/news.rss",
+      "https://habr.com/ru/rss/hub/go/all/",
+      "https://habr.com/ru/rss/best/daily/",
+      "https://cprss.s3.amazonaws.com/golangweekly.com.xml"
+   ],
+   "period": 5
+}

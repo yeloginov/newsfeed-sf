@@ -1,11 +1,16 @@
-// Пакет для работы с RSS-потоками.
+// Пакет storage
+// Реализует обработку RSS-потоков
+// (в основе код из примера Дмитрия Титова)
+//
+// Проект NewsFeed
+// Автор: Егор Логинов (GO-11) по заданию SkillFactory в модуле 36 (Новостной агрегатор)
+
 package rss
 
 import (
 	"encoding/xml"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"time"
 
 	"newsfeed/pkg/storage"
@@ -32,9 +37,9 @@ type Item struct {
 	Link        string `xml:"link"`
 }
 
-// Parse читает rss-поток и возвращет
-// массив раскодированных новостей.
+// Parse читает rss-поток из источника url и возвращет слайс раскодированных новостей.
 func Parse(url string) ([]storage.Post, error) {
+
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -43,28 +48,30 @@ func Parse(url string) ([]storage.Post, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var f Feed
 	err = xml.Unmarshal(b, &f)
 	if err != nil {
 		return nil, err
 	}
+
 	var data []storage.Post
 	for _, item := range f.Chanel.Items {
 		var p storage.Post
 		p.Title = item.Title
 		p.Content = item.Description
 		p.Content = strip.StripTags(p.Content)
-		p.Link = item.Link
-		// Sat, 15 May 2021 04:05:00 +0300
-		item.PubDate = strings.ReplaceAll(item.PubDate, ",", "")
-		t, err := time.Parse("Mon 2 Jan 2006 15:04:05 -0700", item.PubDate)
+		p.URL = item.Link
+		// Парсим время поста и сохраняем в int64
+		t, err := time.Parse("Mon, 2 Jan 2006 15:04:05 -0700", item.PubDate)
 		if err != nil {
-			t, err = time.Parse("Mon 2 Jan 2006 15:04:05 GMT", item.PubDate)
+			t, err = time.Parse("Mon, 2 Jan 2006 15:04:05 -0700", item.PubDate)
 		}
 		if err == nil {
-			p.PubTime = t.Unix()
+			p.PostedAt = t.Unix()
 		}
 		data = append(data, p)
 	}
+
 	return data, nil
 }

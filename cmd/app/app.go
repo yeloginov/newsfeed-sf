@@ -26,13 +26,14 @@ const (
 	DBPassword = "Tdf_p9EXa9n"
 )
 
-// конфигурация приложения
+// Конфигурация приложения.
 type config struct {
-	URLS   []string `json:"rss"`
-	Period int      `json:"request_period"`
+	Sources []string `json:"rss"`
+	Period  int      `json:"period"`
 }
 
 func main() {
+
 	// инициализация зависимостей приложения
 	db, err := storage.New(fmt.Sprintf("postgres://%s:%s@%s:%s/%s", DBUser, DBPassword, DBHost, DBPort, DBName))
 	if err != nil {
@@ -55,18 +56,18 @@ func main() {
 	// для каждой ссылки
 	chPosts := make(chan []storage.Post)
 	chErrs := make(chan error)
-	for _, url := range config.URLS {
+	for _, url := range config.Sources {
 		go parseURL(url, db, chPosts, chErrs, config.Period)
 	}
 
-	// запись потока новостей в БД
+	// Запись потока новостей в БД.
 	go func() {
 		for posts := range chPosts {
-			db.StoreNews(posts)
+			db.StorePosts(posts)
 		}
 	}()
 
-	// обработка потока ошибок
+	// Обработка потока ошибок.
 	go func() {
 		for err := range chErrs {
 			log.Println("ошибка:", err)
